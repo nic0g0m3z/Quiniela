@@ -568,10 +568,16 @@ function MatchesTab({ user, quiniela, matches, predictions, members, isMember, r
 function MatchCard({ match, quiniela, user, prediction, allPredictions, usernameMap, reload, toast, isMember }) {
   const locked = isLocked(match);
   const finished = match.status === "finished";
-  const hasRealTeams = match.home_team && match.away_team
-    && !/(winner|loser|tbd|^—$)/i.test(match.home_team)
-    && !/(winner|loser|tbd|^—$)/i.test(match.away_team);
-  const tbd = !hasRealTeams;
+  const looksLikeRealTeam = (name) => {
+  if (!name) return false;
+  const t = name.trim();
+  if (t.length < 3) return false;
+  if (!/[a-zA-Z]{3,}/.test(t)) return false;
+  if (/^(winner|loser|tbd|—|runner-up|\d+[a-z])/i.test(t)) return false;
+  if (/^(group|match|qf|sf|r\d|w\d|l\d)/i.test(t)) return false;
+  return true;
+};
+const tbd = !looksLikeRealTeam(match.home_team) || !looksLikeRealTeam(match.away_team);
   const [editing, setEditing] = useState(false);
   const [home, setHome] = useState(prediction?.home_score ?? "");
   const [away, setAway] = useState(prediction?.away_score ?? "");
@@ -621,24 +627,33 @@ function MatchCard({ match, quiniela, user, prediction, allPredictions, username
         )}
       </div>
 
-      <div className="row" style={{ justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
-        <div style={{ flex: 1, textAlign: "right" }}>
-          <div style={{ fontWeight: 700, fontSize: 16, color: tbd ? "var(--text-muted)" : "var(--text)" }}>{match.home_team || "TBD"}</div>
-          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>HOME</div>
-        </div>
-        <div style={{ textAlign: "center", minWidth: 120 }}>
-          {finished ? (
-            <div className="display accent" style={{ fontSize: 36, fontWeight: 400 }}>
-              {match.home_score} <span className="muted" style={{ fontSize: 20 }}>—</span> {match.away_score}
+<div className="row" style={{ justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+        {tbd ? (
+          <div style={{ flex: 1, textAlign: "center", padding: "20px 0" }}>
+            <div className="display muted" style={{ fontSize: 48, letterSpacing: 4 }}>TBD</div>
+            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>Teams will be set after earlier rounds finish</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ flex: 1, textAlign: "right" }}>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>{match.home_team}</div>
+              <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>HOME</div>
             </div>
-          ) : (
-            <div className="display muted" style={{ fontSize: 36 }}>VS</div>
-          )}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 16, color: tbd ? "var(--text-muted)" : "var(--text)" }}>{match.away_team || "TBD"}</div>
-          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>AWAY</div>
-        </div>
+            <div style={{ textAlign: "center", minWidth: 120 }}>
+              {finished ? (
+                <div className="display accent" style={{ fontSize: 36, fontWeight: 400 }}>
+                  {match.home_score} <span className="muted" style={{ fontSize: 20 }}>—</span> {match.away_score}
+                </div>
+              ) : (
+                <div className="display muted" style={{ fontSize: 36 }}>VS</div>
+              )}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 16 }}>{match.away_team}</div>
+              <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>AWAY</div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="divider" />
