@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Quiniela</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     THEME — change colors / fonts / sizes here
+     ============================================================ */
+  :root {
+    --bg-base: #0a0a0a;            /* page background */
+    --bg-card: #161616;            /* card background */
+    --bg-input: #0a0a0a;           /* input background */
+    --border: #262626;             /* default border */
+    --border-strong: #3f3f3f;      /* hover border */
+    --text: #f5f5f5;               /* main text */
+    --text-muted: #a3a3a3;         /* secondary text */
+    --text-faint: #737373;         /* tertiary text */
+    --accent: #d4ff3a;             /* primary accent color (lime) */
+    --accent-hover: #bfeb20;       /* button hover */
+    --danger: #ff6b6b;             /* red for danger / errors */
+    --success: #5ee08a;            /* green for success */
+    --warning: #ffc94a;            /* yellow for warnings */
+    --admin: #d18aff;              /* purple for admin badges */
+    --font-body: 'Manrope', sans-serif;
+    --font-display: 'Bebas Neue', sans-serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body,#root{height:100%}
+  body{font-family:var(--font-body);background:var(--bg-base);color:var(--text);-webkit-font-smoothing:antialiased}
+  .app{min-height:100vh;background:radial-gradient(ellipse at top,#1a1a1a 0%,var(--bg-base) 50%)}
+  .display{font-family:var(--font-display);letter-spacing:.02em}
+  .container{max-width:1100px;margin:0 auto;padding:24px}
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px}
+  .card-hover{cursor:pointer;transition:all .15s}
+  .card-hover:hover{border-color:var(--border-strong);transform:translateY(-1px)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-primary{background:var(--accent);color:var(--bg-base)}
+  .btn-primary:hover:not(:disabled){background:var(--accent-hover)}
+  .btn-secondary{background:var(--border);color:var(--text)}
+  .btn-secondary:hover:not(:disabled){background:#333}
+  .btn-ghost{background:transparent;color:var(--text-muted)}
+  .btn-ghost:hover:not(:disabled){color:var(--text);background:#1a1a1a}
+  .btn-danger{background:#3a1414;color:var(--danger)}
+  .btn-danger:hover:not(:disabled){background:#4a1919}
+  .input{width:100%;padding:12px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;font-family:inherit;outline:none}
+  .input:focus{border-color:var(--accent)}
+  .label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+  .nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,.85);backdrop-filter:blur(12px);border-bottom:1px solid #1f1f1f}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+  .badge-locked{background:#332b14;color:var(--warning)}
+  .badge-open{background:#14331e;color:var(--success)}
+  .badge-finished{background:#1a1a1a;color:var(--text-muted)}
+  .badge-admin{background:#2b1433;color:var(--admin)}
+  .score-input{width:48px;text-align:center;font-size:22px;font-weight:700;padding:8px 0;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:#fff;font-family:inherit;outline:none}
+  .score-input:focus{border-color:var(--accent)}
+  .rank-1{background:linear-gradient(90deg,#332714 0%,var(--bg-card) 80%)}
+  .rank-2{background:linear-gradient(90deg,#262626 0%,var(--bg-card) 80%)}
+  .rank-3{background:linear-gradient(90deg,#2a1f14 0%,var(--bg-card) 80%)}
+  @media(max-width:640px){.container{padding:14px}.card{padding:16px}}
+  .accent{color:var(--accent)}
+  .muted{color:var(--text-muted)}
+  .divider{height:1px;background:var(--border);margin:16px 0}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .stack{display:flex;flex-direction:column;gap:14px}
+  .row{display:flex;align-items:center;gap:12px}
+  .between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .tabbar{display:flex;gap:4px;background:var(--bg-card);padding:4px;border-radius:12px;border:1px solid var(--border);margin-bottom:16px}
+  .tab{flex:1;padding:9px;text-align:center;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;color:var(--text-muted);border:none;background:transparent;font-family:inherit;transition:all .15s}
+  .tab.active{background:var(--bg-base);color:var(--accent)}
+  .empty{text-align:center;padding:40px 20px;color:var(--text-faint)}
+  .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--bg-card);border:1px solid var(--border);padding:12px 18px;border-radius:10px;z-index:100;font-size:14px;font-weight:500;max-width:90vw}
+  .toast.error{border-color:#7a2222;color:var(--danger)}
+  .toast.success{border-color:#2a5a3a;color:var(--success)}
+  .danger-card{border-color:#7a2222 !important}
+  details summary{list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  .icon{display:inline-block;vertical-align:-2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Libraries from CDNs (no build step needed) -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script type="text/babel" data-type="module">
+// =====================================================================
+// ⚙️ CONFIGURATION — paste your Supabase credentials here
+// (Project Settings → API → Project URL + anon public key)
+// =====================================================================
+const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+
+// =====================================================================
+// SCORING RULES — change these to adjust points
+// =====================================================================
+const POINTS_EXACT = 5;      // points for exactly correct score (e.g. predicted 2-1, actual 2-1)
+const POINTS_OUTCOME = 2;    // points for correct winner/draw but wrong score
+// Wrong predictions = 0 points (no constant needed)
+
+// =====================================================================
+// (everything below is the app — feel free to read it, edit text in JSX
+//  blocks, or adjust components)
+// =====================================================================
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const { useState, useEffect, useMemo, useCallback } = React;
+
+const outcomeOf = (h, a) => (h > a ? "H" : h < a ? "A" : "D");
+const scorePrediction = (pred, match) => {
+  if (!pred || match.home_score == null || match.away_score == null) return 0;
+  if (pred.home_score === match.home_score && pred.away_score === match.away_score) return POINTS_EXACT;
+  if (outcomeOf(pred.home_score, pred.away_score) === outcomeOf(match.home_score, match.away_score)) return POINTS_OUTCOME;
+  return 0;
+};
+const isLocked = (m) => m.status === "finished" || (m.kickoff && new Date(m.kickoff).getTime() <= Date.now());
+const genCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+
+// ---------- inline SVG icons ----------
+const Icon = ({ d, size = 16 }) => (
+  <svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{d}</svg>
+);
+const I = {
+  trophy:   <Icon size={22} d={<><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM5 4H3v3a3 3 0 003 3M19 4h2v3a3 3 0 01-3 3"/></>}/>,
+  logout:   <Icon d={<><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></>}/>,
+  plus:     <Icon d={<path d="M12 5v14M5 12h14"/>}/>,
+  users:    <Icon size={11} d={<><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></>}/>,
+  calendar: <Icon size={36} d={<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>}/>,
+  lock:     <Icon size={10} d={<><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></>}/>,
+  unlock:   <Icon size={10} d={<><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 019.9-1"/></>}/>,
+  shield:   <Icon size={10} d={<path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/>}/>,
+  copy:     <Icon size={14} d={<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></>}/>,
+  check:    <Icon size={12} d={<path d="M20 6L9 17l-5-5"/>}/>,
+  chevron:  <Icon size={20} d={<path d="M9 18l6-6-6-6"/>}/>,
+  target:   <Icon size={10} d={<><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></>}/>,
+  edit:     <Icon size={13} d={<><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>}/>,
+  save:     <Icon size={14} d={<><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></>}/>,
+  x:        <Icon size={14} d={<path d="M18 6L6 18M6 6l12 12"/>}/>,
+  crown:    <Icon size={10} d={<path d="M2 6l4 6 6-8 6 8 4-6v14H2z"/>}/>,
+  arrow:    <Icon d={<><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></>}/>,
+  refresh:  <Icon size={12} d={<><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></>}/>,
+  trash:    <Icon size={14} d={<><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></>}/>,
+};
+
+function useToast() {
+  const [toast, setToast] = useState(null);
+  const show = useCallback((msg, kind = "success") => {
+    setToast({ msg, kind });
+    setTimeout(() => setToast(null), 2600);
+  }, []);
+  const Toast = () => toast ? <div className={`toast ${toast.kind}`}>{toast.msg}</div> : null;
+  return { show, Toast };
+}
+
+// =====================================================================
+// AUTH SCREEN
+// =====================================================================
+function AuthScreen({ toast }) {
+  const [mode, setMode] = useState("login");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    if (!email || !password) return toast.show("Email and password are required", "error");
+    if (mode === "register" && !username) return toast.show("Username is required", "error");
+    if (password.length < 6) return toast.show("Password must be at least 6 characters", "error");
+    setBusy(true);
+    try {
+      if (mode === "register") {
+        const { error } = await sb.auth.signUp({
+          email, password,
+          options: { data: { username: username.trim().toLowerCase() } },
+        });
+        if (error) toast.show(error.message, "error");
+        else toast.show("Account created — signing in...");
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) toast.show(error.message, "error");
+      }
+    } catch (e) { toast.show("Something went wrong", "error"); }
+    setBusy(false);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, color: "var(--accent)" }}>
+            {I.trophy}<h1 className="display" style={{ fontSize: 44, lineHeight: 1, color: "var(--text)" }}>QUINIELA</h1>
+          </div>
+          <p className="muted" style={{ marginTop: 8, fontSize: 14 }}>Predict. Compete. Conquer the table.</p>
+        </div>
+
+        <div className="card">
+          <div className="tabbar">
+            <button className={`tab ${mode === "login" ? "active" : ""}`} onClick={() => setMode("login")}>Login</button>
+            <button className={`tab ${mode === "register" ? "active" : ""}`} onClick={() => setMode("register")}>Register</button>
+          </div>
+
+          <div className="stack">
+            {mode === "register" && (
+              <div>
+                <label className="label">Username (shown on leaderboards)</label>
+                <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="e.g. messi10" autoCapitalize="none" />
+              </div>
+            )}
+            <div>
+              <label className="label">Email</label>
+              <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" autoCapitalize="none" />
+            </div>
+            <div>
+              <label className="label">Password</label>
+              <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder="At least 6 characters" />
+            </div>
+            <button className="btn btn-primary" onClick={submit} disabled={busy} style={{ width: "100%", justifyContent: "center", padding: 14 }}>
+              {busy ? "..." : mode === "login" ? "Sign in" : "Create account"}
+            </button>
+            {mode === "register" && (
+              <p className="muted" style={{ fontSize: 12, textAlign: "center" }}>
+                The first registered user becomes the platform admin.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+// DASHBOARD
+// =====================================================================
+function Dashboard({ user, profile, onOpen, onCreate, toast }) {
+  const [mine, setMine] = useState([]);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const refresh = async () => {
+    setLoading(true);
+    // Get quinielas user is a member of
+    const { data: memData, error: memErr } = await sb.from("memberships")
+      .select("quiniela:quinielas(id,name,description,owner_id,invite_code,created_at)")
+      .eq("user_id", user.id);
+    if (memErr) { toast.show(memErr.message, "error"); setLoading(false); return; }
+    const fromMembership = (memData || []).map(r => r.quiniela).filter(Boolean);
+
+    // Get quinielas user OWNS (even if not a member — they manage without playing)
+    const { data: ownedData } = await sb.from("quinielas")
+      .select("id,name,description,owner_id,invite_code,created_at")
+      .eq("owner_id", user.id);
+
+    // Merge, deduplicating by id
+    const byId = {};
+    [...fromMembership, ...(ownedData || [])].forEach(q => { if (q) byId[q.id] = q; });
+    const qs = Object.values(byId);
+
+    const ids = qs.map(q => q.id);
+    if (ids.length) {
+      const { data: m } = await sb.from("memberships").select("quiniela_id").in("quiniela_id", ids);
+      const counts = {};
+      (m || []).forEach(r => { counts[r.quiniela_id] = (counts[r.quiniela_id] || 0) + 1; });
+      qs.forEach(q => q.member_count = counts[q.id] || 0);
+      // Mark which ones the user is actively a member of
+      const memberOf = new Set(fromMembership.map(q => q.id));
+      qs.forEach(q => q.user_is_member = memberOf.has(q.id));
+    }
+    setMine(qs);
+    setLoading(false);
+  };
+  useEffect(() => { refresh(); }, []);
+
+  const join = async () => {
+    const c = code.trim().toUpperCase();
+    if (!c) return;
+    const { data: qs, error } = await sb.rpc("find_quiniela_by_code", { code: c });
+    const q = qs && qs[0];
+    if (error || !q) return toast.show("Invalid invite code", "error");
+    const { error: e2 } = await sb.from("memberships").insert({ quiniela_id: q.id, user_id: user.id });
+    if (e2 && !e2.message.includes("duplicate")) return toast.show(e2.message, "error");
+    toast.show(`Joined "${q.name}"`);
+    setCode("");
+    onOpen(q);
+  };
+
+  return (
+    <div className="container">
+      <div className="between" style={{ marginBottom: 22 }}>
+        <div>
+          <h2 className="display" style={{ fontSize: 34 }}>YOUR QUINIELAS</h2>
+          <p className="muted" style={{ fontSize: 14 }}>Hi <span className="accent">{profile.username}</span> — pick a pool or join a new one.</p>
+        </div>
+        {profile.is_platform_admin && (
+          <button className="btn btn-primary" onClick={onCreate}>{I.plus} New quiniela</button>
+        )}
+      </div>
+
+      <div className="card" style={{ marginBottom: 18 }}>
+        <label className="label">Join with invite code</label>
+        <div className="row">
+          <input className="input" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} onKeyDown={(e) => e.key === "Enter" && join()} placeholder="6-character code" style={{ flex: 1, letterSpacing: 3, fontWeight: 700 }} />
+          <button className="btn btn-secondary" onClick={join}>Join</button>
+        </div>
+      </div>
+
+      {loading ? <div className="empty">Loading...</div>
+       : mine.length === 0 ? (
+          <div className="card empty">
+            <div style={{ margin: "0 auto 12px", opacity: .4, color: "var(--text-muted)" }}>{I.trophy}</div>
+            <p>You haven't joined any quinielas yet.</p>
+            <p className="muted" style={{ fontSize: 13, marginTop: 6 }}>Use an invite code above to join one.</p>
+          </div>
+        ) : (
+          <div className="stack">
+            {mine.map(q => (
+              <div key={q.id} className="card card-hover" onClick={() => onOpen(q)}>
+                <div className="between">
+                  <div style={{ minWidth: 0 }}>
+                    <div className="row" style={{ marginBottom: 4 }}>
+                      <h3 style={{ fontSize: 18, fontWeight: 700 }}>{q.name}</h3>
+                      {q.owner_id === user.id && <span className="badge badge-admin">{I.crown} owner</span>}
+                      {q.owner_id === user.id && !q.user_is_member && <span className="badge" style={{ background: "#2a2a2a", color: "var(--text-muted)" }}>manager only</span>}
+                    </div>
+                    {q.description && <p className="muted" style={{ fontSize: 13 }}>{q.description}</p>}
+                    <div className="row" style={{ marginTop: 8, gap: 16 }}>
+                      <span className="muted" style={{ fontSize: 12 }}>{I.users} {q.member_count} members</span>
+                      <span className="muted" style={{ fontSize: 12, letterSpacing: 1, fontFamily: "monospace" }}>{q.invite_code}</span>
+                    </div>
+                  </div>
+                  <span className="muted">{I.chevron}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+    </div>
+  );
+}
+
+// =====================================================================
+// CREATE QUINIELA
+// =====================================================================
+function CreateQuiniela({ user, onBack, onCreated, toast }) {
+  const [name, setName] = useState("");
+  const [desc, setDesc] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const create = async () => {
+    if (!name.trim()) return toast.show("Name is required", "error");
+    setBusy(true);
+    let code, inserted, err;
+    for (let i = 0; i < 8; i++) {
+      code = genCode();
+      const { error } = await sb.from("quinielas").insert({
+        name: name.trim(), description: desc.trim(), owner_id: user.id, invite_code: code,
+      });
+      if (!error) {
+        const { data } = await sb.from("quinielas").select("*").eq("invite_code", code).single();
+        inserted = data;
+        break;
+      }
+      err = error;
+      if (!error.message.toLowerCase().includes("duplicate")) break;
+    }
+    if (!inserted) { setBusy(false); return toast.show(err?.message || "Failed to create", "error"); }
+    // NOTE: We do NOT auto-add the owner as a member.
+    // Owners manage the quiniela without participating; they can use the
+    // invite code to join if they also want to play.
+    toast.show("Quiniela created — share the invite code to add players");
+    setBusy(false);
+    onCreated(inserted);
+  };
+
+  return (
+    <div className="container" style={{ maxWidth: 600 }}>
+      <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 16 }}>{I.arrow} Back</button>
+      <h2 className="display" style={{ fontSize: 30, marginBottom: 20 }}>NEW QUINIELA</h2>
+      <div className="card stack">
+        <div><label className="label">Name</label><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. World Cup 2026" /></div>
+        <div><label className="label">Description (optional)</label><textarea className="input" value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} placeholder="What's this pool about?" /></div>
+        <p className="muted" style={{ fontSize: 12 }}>
+          As the owner you'll manage this quiniela. You won't be a player automatically — if you want to participate, join with the invite code after creating.
+        </p>
+        <button className="btn btn-primary" onClick={create} disabled={busy} style={{ justifyContent: "center", padding: 14 }}>
+          {busy ? "..." : "Create quiniela"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+// QUINIELA DETAIL
+// =====================================================================
+function QuinielaView({ user, profile, quiniela, onBack, onRefresh, onDeleted, toast }) {
+  const [tab, setTab] = useState("matches");
+  const [matches, setMatches] = useState([]);
+  const [predictions, setPredictions] = useState({});
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [, setTick] = useState(0);
+
+  const isOwner = quiniela.owner_id === user.id;
+  const isAdmin = profile.is_platform_admin || isOwner;
+  const isMember = useMemo(() => members.some(m => m.id === user.id), [members, user.id]);
+
+  // Re-render every 30s so kickoff-based locks update without page refresh
+  useEffect(() => {
+    const t = setInterval(() => setTick(x => x + 1), 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  const joinThisQuiniela = async () => {
+    const { error } = await sb.from("memberships").insert({ quiniela_id: quiniela.id, user_id: user.id });
+    if (error && !error.message.includes("duplicate")) return toast.show(error.message, "error");
+    toast.show("Joined — you can now make predictions");
+    load();
+  };
+
+  const load = async () => {
+    setLoading(true);
+    // Matches are now global per tournament — fetch by quiniela's tournament
+    const tournament = quiniela.tournament || 'worldcup_2026';
+    const { data: mData } = await sb.from("matches").select("*").eq("tournament", tournament).order("kickoff");
+    setMatches(mData || []);
+    const { data: mems } = await sb.from("memberships").select("user_id, profile:profiles(id,username,is_platform_admin)").eq("quiniela_id", quiniela.id);
+    setMembers((mems || []).map(m => m.profile).filter(Boolean));
+    if (mData && mData.length) {
+      // Predictions are scoped to this quiniela
+      const { data: pData } = await sb.from("predictions")
+        .select("*")
+        .eq("quiniela_id", quiniela.id)
+        .in("match_id", mData.map(m => m.id));
+      const preds = {};
+      (pData || []).forEach(p => {
+        preds[p.match_id] = preds[p.match_id] || {};
+        preds[p.match_id][p.user_id] = p;
+      });
+      setPredictions(preds);
+    } else setPredictions({});
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, [quiniela.id]);
+
+  const leaderboard = useMemo(() => {
+    const rows = members.map(m => ({ id: m.id, username: m.username, points: 0, exact: 0, outcome: 0 }));
+    const byId = Object.fromEntries(rows.map(r => [r.id, r]));
+    for (const m of matches) {
+      if (m.home_score == null || m.away_score == null) continue;
+      const mp = predictions[m.id] || {};
+      for (const uid of Object.keys(mp)) {
+        const row = byId[uid];
+        if (!row) continue;
+        const pts = scorePrediction(mp[uid], m);
+        row.points += pts;
+        if (pts === POINTS_EXACT) row.exact++;
+        else if (pts === POINTS_OUTCOME) row.outcome++;
+      }
+    }
+    rows.sort((a, b) =>
+      b.points - a.points || b.exact - a.exact || b.outcome - a.outcome || a.username.localeCompare(b.username)
+    );
+    return rows;
+  }, [matches, predictions, members]);
+
+  return (
+    <div className="container">
+      <button className="btn btn-ghost" onClick={onBack} style={{ marginBottom: 12 }}>{I.arrow} All quinielas</button>
+      <div className="between" style={{ marginBottom: 16, alignItems: "flex-start" }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <h2 className="display" style={{ fontSize: 32, lineHeight: 1.1 }}>{quiniela.name}</h2>
+          {quiniela.description && <p className="muted" style={{ fontSize: 14, marginTop: 4 }}>{quiniela.description}</p>}
+          <div className="row" style={{ marginTop: 10, gap: 14, flexWrap: "wrap" }}>
+            <InviteChip code={quiniela.invite_code} toast={toast} />
+            <span className="muted" style={{ fontSize: 12 }}>{I.users} {members.length}</span>
+            {!isMember && (
+              <button className="btn btn-primary" onClick={joinThisQuiniela} style={{ padding: "6px 12px", fontSize: 13 }}>
+                {I.plus} Join as player
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="tabbar">
+        <button className={`tab ${tab === "matches" ? "active" : ""}`} onClick={() => setTab("matches")}>Matches</button>
+        <button className={`tab ${tab === "leaderboard" ? "active" : ""}`} onClick={() => setTab("leaderboard")}>Leaderboard</button>
+        {isAdmin && <button className={`tab ${tab === "admin" ? "active" : ""}`} onClick={() => setTab("admin")}>Admin</button>}
+      </div>
+
+      {loading ? <div className="empty">Loading...</div> : (
+        <>
+          {tab === "matches" && <MatchesTab user={user} quiniela={quiniela} matches={matches} predictions={predictions} members={members} isMember={isMember} reload={load} toast={toast} />}
+          {tab === "leaderboard" && <LeaderboardTab rows={leaderboard} currentUserId={user.id} />}
+          {tab === "admin" && isAdmin && <AdminTab user={user} profile={profile} quiniela={quiniela} matches={matches} members={members} reload={load} toast={toast} onRefresh={onRefresh} onDeleted={onDeleted} />}
+        </>
+      )}
+    </div>
+  );
+}
+
+function InviteChip({ code, toast }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard?.writeText(code).then(() => {
+      setCopied(true); toast.show("Code copied");
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <button className="btn btn-secondary" onClick={copy} style={{ padding: "6px 10px", fontSize: 12, letterSpacing: 2, fontFamily: "monospace" }}>
+      {copied ? I.check : I.copy} {code}
+    </button>
+  );
+}
+
+// =====================================================================
+// MATCHES TAB
+// =====================================================================
+function MatchesTab({ user, quiniela, matches, predictions, members, isMember, reload, toast }) {
+  const [filter, setFilter] = useState("upcoming");
+  const finished = matches.filter(m => m.status === "finished");
+  const upcoming = matches.filter(m => m.status !== "finished");
+  const list = filter === "upcoming" ? upcoming : finished;
+  const usernameMap = useMemo(() => Object.fromEntries(members.map(m => [m.id, m.username])), [members]);
+
+  return (
+    <>
+      <div className="tabbar" style={{ maxWidth: 320 }}>
+        <button className={`tab ${filter === "upcoming" ? "active" : ""}`} onClick={() => setFilter("upcoming")}>Upcoming ({upcoming.length})</button>
+        <button className={`tab ${filter === "finished" ? "active" : ""}`} onClick={() => setFilter("finished")}>Finished ({finished.length})</button>
+      </div>
+      {list.length === 0 ? (
+        <div className="card empty">
+          <div style={{ margin: "0 auto 12px", opacity: .4, color: "var(--text-muted)" }}>{I.calendar}</div>
+          <p>No {filter} matches.</p>
+        </div>
+      ) : (
+        <div className="stack">
+          {list.map(m => (
+            <MatchCard key={m.id} match={m} quiniela={quiniela} user={user}
+              prediction={predictions[m.id]?.[user.id]}
+              allPredictions={predictions[m.id] || {}}
+              usernameMap={usernameMap}
+              isMember={isMember}
+              reload={reload} toast={toast} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+// =====================================================================
+// MATCH CARD
+// =====================================================================
+function MatchCard({ match, quiniela, user, prediction, allPredictions, usernameMap, reload, toast, isMember }) {
+  const locked = isLocked(match);
+  const finished = match.status === "finished";
+  const hasRealTeams = match.home_team && match.away_team
+    && !/(winner|loser|tbd|^—$)/i.test(match.home_team)
+    && !/(winner|loser|tbd|^—$)/i.test(match.away_team);
+  const tbd = !hasRealTeams;
+  const [editing, setEditing] = useState(false);
+  const [home, setHome] = useState(prediction?.home_score ?? "");
+  const [away, setAway] = useState(prediction?.away_score ?? "");
+
+  useEffect(() => {
+    setHome(prediction?.home_score ?? "");
+    setAway(prediction?.away_score ?? "");
+  }, [prediction?.home_score, prediction?.away_score]);
+
+  const save = async () => {
+    const h = parseInt(home, 10), a = parseInt(away, 10);
+    if (isNaN(h) || isNaN(a) || h < 0 || a < 0 || h > 99 || a > 99) return toast.show("Enter valid scores (0-99)", "error");
+    if (locked) return toast.show("This match is locked", "error");
+    if (tbd) return toast.show("Teams not yet determined for this match", "error");
+    const { error } = await sb.from("predictions").upsert({
+      quiniela_id: quiniela.id, match_id: match.id, user_id: user.id, home_score: h, away_score: a,
+    }, { onConflict: "quiniela_id,match_id,user_id" });
+    if (error) return toast.show(error.message, "error");
+    toast.show("Prediction saved");
+    setEditing(false);
+    reload();
+  };
+
+  const status = finished ? "finished" : tbd ? "tbd" : locked ? "locked" : "open";
+  const myPts = finished ? scorePrediction(prediction, match) : null;
+
+  return (
+    <div className="card">
+      <div className="between" style={{ marginBottom: 14 }}>
+        <div className="row" style={{ gap: 8 }}>
+          <span className={`badge badge-${status === "tbd" ? "finished" : status}`}>
+            {status === "locked" && I.lock}{status === "open" && I.unlock} {status === "tbd" ? "teams TBD" : status}
+          </span>
+          {(match.round || match.group_name) && (
+            <span className="muted" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              {match.round}{match.group_name ? ` · ${match.group_name}` : ""}
+            </span>
+          )}
+          <span className="muted" style={{ fontSize: 12 }}>
+            {match.kickoff ? new Date(match.kickoff).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Date TBD"}
+          </span>
+        </div>
+        {finished && myPts != null && (
+          <span className="badge" style={{ background: myPts > 0 ? "#14331e" : "#2a2a2a", color: myPts > 0 ? "var(--success)" : "var(--text-muted)" }}>
+            {I.target} {myPts} pts
+          </span>
+        )}
+      </div>
+
+      <div className="row" style={{ justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+        <div style={{ flex: 1, textAlign: "right" }}>
+          <div style={{ fontWeight: 700, fontSize: 16, color: tbd ? "var(--text-muted)" : "var(--text)" }}>{match.home_team || "TBD"}</div>
+          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>HOME</div>
+        </div>
+        <div style={{ textAlign: "center", minWidth: 120 }}>
+          {finished ? (
+            <div className="display accent" style={{ fontSize: 36, fontWeight: 400 }}>
+              {match.home_score} <span className="muted" style={{ fontSize: 20 }}>—</span> {match.away_score}
+            </div>
+          ) : (
+            <div className="display muted" style={{ fontSize: 36 }}>VS</div>
+          )}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 16, color: tbd ? "var(--text-muted)" : "var(--text)" }}>{match.away_team || "TBD"}</div>
+          <div className="muted" style={{ fontSize: 11, marginTop: 2 }}>AWAY</div>
+        </div>
+      </div>
+
+      <div className="divider" />
+
+      <div className="between" style={{ flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <div className="label" style={{ marginBottom: 8 }}>Your prediction</div>
+          {!isMember ? (
+            <span className="muted" style={{ fontSize: 13 }}>Join this quiniela to make predictions</span>
+          ) : tbd ? (
+            <span className="muted" style={{ fontSize: 13 }}>Predictions open once teams are set</span>
+          ) : editing && !locked ? (
+            <div className="row">
+              <input className="score-input" value={home} onChange={(e) => setHome(e.target.value.replace(/\D/g, ""))} maxLength={2} inputMode="numeric" />
+              <span className="muted">—</span>
+              <input className="score-input" value={away} onChange={(e) => setAway(e.target.value.replace(/\D/g, ""))} maxLength={2} inputMode="numeric" />
+              <button className="btn btn-primary" onClick={save} style={{ padding: "8px 12px" }}>{I.save}</button>
+              <button className="btn btn-ghost" onClick={() => { setEditing(false); setHome(prediction?.home_score ?? ""); setAway(prediction?.away_score ?? ""); }}>{I.x}</button>
+            </div>
+          ) : prediction ? (
+            <div className="row">
+              <div style={{ fontSize: 22, fontWeight: 700 }}>{prediction.home_score} — {prediction.away_score}</div>
+              {!locked && <button className="btn btn-ghost" onClick={() => setEditing(true)} style={{ padding: "6px 10px" }}>{I.edit} Edit</button>}
+            </div>
+          ) : !locked ? (
+            <button className="btn btn-secondary" onClick={() => setEditing(true)}>{I.plus} Add prediction</button>
+          ) : (
+            <span className="muted" style={{ fontSize: 13 }}>No prediction submitted</span>
+          )}
+        </div>
+      </div>
+
+      {locked && Object.keys(allPredictions).length > 1 && (
+        <>
+          <div className="divider" />
+          <details>
+            <summary className="muted" style={{ cursor: "pointer", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              All predictions ({Object.keys(allPredictions).length}) ▾
+            </summary>
+            <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 6 }}>
+              {Object.entries(allPredictions).map(([uid, p]) => {
+                const pts = finished ? scorePrediction(p, match) : null;
+                const uname = usernameMap[uid] || "?";
+                return (
+                  <div key={uid} className="row" style={{ background: "var(--bg-base)", padding: "6px 10px", borderRadius: 6, justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 13, fontWeight: uid === user.id ? 700 : 500, color: uid === user.id ? "var(--accent)" : "var(--text)" }}>{uname}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{p.home_score}-{p.away_score}{pts != null && <span className="muted" style={{ fontSize: 11, marginLeft: 4 }}>·{pts}</span>}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+        </>
+      )}
+    </div>
+  );
+}
+
+// =====================================================================
+// LEADERBOARD
+// =====================================================================
+function LeaderboardTab({ rows, currentUserId }) {
+  return (
+    <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+      <div style={{ padding: "14px 20px", background: "var(--bg-base)", borderBottom: "1px solid var(--border)" }}>
+        <div className="row" style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.5 }}>
+          <div style={{ width: 30 }}>#</div>
+          <div style={{ flex: 1 }}>Player</div>
+          <div style={{ width: 60, textAlign: "right" }}>Exact</div>
+          <div style={{ width: 60, textAlign: "right" }}>Right</div>
+          <div style={{ width: 60, textAlign: "right" }}>Points</div>
+        </div>
+      </div>
+      {rows.length === 0 ? <div className="empty">No players yet</div> : rows.map((r, i) => (
+        <div key={r.id} className={`row ${i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : ""}`}
+          style={{ padding: "14px 20px", borderBottom: "1px solid #1f1f1f", gap: 12 }}>
+          <div style={{ width: 30, fontWeight: 800, fontSize: 16, color: i < 3 ? "var(--accent)" : "var(--text-muted)" }}>
+            {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
+          </div>
+          <div style={{ flex: 1, fontWeight: r.id === currentUserId ? 800 : 600, color: r.id === currentUserId ? "var(--accent)" : "var(--text)", fontSize: 15 }}>
+            {r.username}{r.id === currentUserId && <span className="muted" style={{ marginLeft: 6, fontSize: 11, fontWeight: 400 }}>(you)</span>}
+          </div>
+          <div style={{ width: 60, textAlign: "right", fontWeight: 600, color: "var(--success)" }}>{r.exact}</div>
+          <div style={{ width: 60, textAlign: "right", fontWeight: 600, color: "var(--warning)" }}>{r.outcome}</div>
+          <div style={{ width: 60, textAlign: "right", fontWeight: 800, fontSize: 18 }}>{r.points}</div>
+        </div>
+      ))}
+      <div style={{ padding: "12px 20px", fontSize: 11, color: "var(--text-faint)", background: "var(--bg-base)" }}>
+        Exact: <strong style={{ color: "var(--success)" }}>{POINTS_EXACT}pts</strong> · Outcome: <strong style={{ color: "var(--warning)" }}>{POINTS_OUTCOME}pts</strong> · Wrong: 0pts. Tie-break: exact → outcome → alphabetical.
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+// ADMIN TAB
+// =====================================================================
+function AdminTab({ user, profile, quiniela, matches, members, reload, toast, onRefresh, onDeleted }) {
+  return (
+    <div className="stack">
+      <div className="card">
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Matches</h3>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+          Matches and results for <strong style={{ color: "var(--text)" }}>{quiniela.tournament === 'worldcup_2026' ? 'World Cup 2026' : quiniela.tournament}</strong> are synced automatically every 30 minutes from a public data source.
+          You don't need to add matches, enter scores, or lock anything — it all happens on its own.
+        </p>
+        <div className="row" style={{ gap: 14, flexWrap: "wrap" }}>
+          <div style={{ background: "var(--bg-base)", padding: "10px 14px", borderRadius: 8, flex: 1, minWidth: 140 }}>
+            <div className="muted" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Total</div>
+            <div style={{ fontSize: 22, fontWeight: 700 }}>{matches.length}</div>
+          </div>
+          <div style={{ background: "var(--bg-base)", padding: "10px 14px", borderRadius: 8, flex: 1, minWidth: 140 }}>
+            <div className="muted" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Finished</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "var(--success)" }}>{matches.filter(m => m.status === 'finished').length}</div>
+          </div>
+          <div style={{ background: "var(--bg-base)", padding: "10px 14px", borderRadius: 8, flex: 1, minWidth: 140 }}>
+            <div className="muted" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Upcoming</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "var(--warning)" }}>{matches.filter(m => m.status !== 'finished').length}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 14 }}>Members ({members.length})</h3>
+        {members.length === 0 && (
+          <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+            No players yet. Share the invite code below to add players.
+          </p>
+        )}
+        <div className="stack" style={{ gap: 8 }}>
+          {members.map(m => (
+            <div key={m.id} className="between" style={{ padding: "8px 12px", background: "var(--bg-base)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
+              <div className="row">
+                <span style={{ fontWeight: 600 }}>{m.username}</span>
+                {m.id === quiniela.owner_id && <span className="badge badge-admin">{I.crown} owner</span>}
+                {m.is_platform_admin && m.id !== quiniela.owner_id && <span className="badge badge-admin">{I.shield} platform admin</span>}
+              </div>
+              <div className="row" style={{ gap: 6 }}>
+                {profile.is_platform_admin && m.id !== user.id && (
+                  <button className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: 12 }}
+                    onClick={async () => {
+                      const action = m.is_platform_admin ? "Remove platform admin from" : "Make platform admin:";
+                      if (!confirm(`${action} ${m.username}?`)) return;
+                      const { error } = await sb.from("profiles").update({ is_platform_admin: !m.is_platform_admin }).eq("id", m.id);
+                      if (error) toast.show(error.message, "error");
+                      else { toast.show("Permissions updated"); reload(); }
+                    }}>
+                    {m.is_platform_admin ? "Revoke admin" : "Make admin"}
+                  </button>
+                )}
+                {m.id !== quiniela.owner_id && m.id !== user.id && (
+                  <button className="btn btn-danger" style={{ padding: "4px 10px", fontSize: 12 }}
+                    onClick={async () => {
+                      if (!confirm(`Remove ${m.username} from this quiniela?`)) return;
+                      const { error } = await sb.from("memberships").delete().eq("quiniela_id", quiniela.id).eq("user_id", m.id);
+                      if (error) toast.show(error.message, "error");
+                      else { toast.show(`${m.username} removed`); reload(); }
+                    }}>
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Invite code</h3>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 10 }}>Share this code with players you want to invite.</p>
+        <div className="row" style={{ background: "var(--bg-base)", padding: 14, borderRadius: 10, justifyContent: "space-between" }}>
+          <div className="display accent" style={{ fontSize: 28, letterSpacing: 6 }}>{quiniela.invite_code}</div>
+          <button className="btn btn-secondary" onClick={() => { navigator.clipboard?.writeText(quiniela.invite_code); toast.show("Code copied"); }}>{I.copy} Copy</button>
+        </div>
+        <button className="btn btn-ghost" style={{ marginTop: 10, fontSize: 12 }}
+          onClick={async () => {
+            if (!confirm("Regenerate the invite code? The old one will stop working.")) return;
+            let code, ok;
+            for (let i = 0; i < 8; i++) {
+              code = genCode();
+              const { error } = await sb.from("quinielas").update({ invite_code: code }).eq("id", quiniela.id);
+              if (!error) { ok = true; break; }
+            }
+            if (ok) { toast.show("New code generated"); onRefresh(); }
+            else toast.show("Failed to generate", "error");
+          }}>{I.refresh} Regenerate code</button>
+      </div>
+
+      <div className="card danger-card">
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6, color: "var(--danger)" }}>Danger zone</h3>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+          Permanently delete this quiniela, including all of its predictions and member list. This cannot be undone.
+        </p>
+        <button className="btn btn-danger"
+          onClick={async () => {
+            const typed = prompt(`Type the quiniela name to confirm deletion:\n\n"${quiniela.name}"`);
+            if (typed !== quiniela.name) {
+              if (typed !== null) toast.show("Name did not match — cancelled", "error");
+              return;
+            }
+            const { error } = await sb.from("quinielas").delete().eq("id", quiniela.id);
+            if (error) return toast.show(error.message, "error");
+            toast.show("Quiniela deleted");
+            onDeleted();
+          }}>
+          {I.trash} Delete quiniela permanently
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// (MatchEditor and AdminMatchRow components removed —
+//  matches are now managed entirely by the auto-sync job)
+
+
+
+// =====================================================================
+// ROOT APP
+// =====================================================================
+function App() {
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [view, setView] = useState({ name: "dashboard" });
+  const [boot, setBoot] = useState(true);
+  const toast = useToast();
+
+  useEffect(() => {
+    sb.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setBoot(false);
+    });
+    const { data: { subscription } } = sb.auth.onAuthStateChange((_e, s) => {
+      setSession(s);
+      if (!s) { setProfile(null); setView({ name: "dashboard" }); }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle().then(({ data }) => setProfile(data));
+  }, [session]);
+
+  const logout = async () => {
+    await sb.auth.signOut();
+    toast.show("Signed out");
+  };
+
+  const refreshOpenQuiniela = async () => {
+    if (view.name !== "quiniela") return;
+    const { data } = await sb.from("quinielas").select("*").eq("id", view.quiniela.id).maybeSingle();
+    if (data) setView({ name: "quiniela", quiniela: data });
+  };
+
+  if (boot) return <div className="app"><div className="empty" style={{ paddingTop: 200 }}>Loading...</div></div>;
+  if (!session) return <div className="app"><toast.Toast /><AuthScreen toast={toast} /></div>;
+  if (!profile) return <div className="app"><div className="empty" style={{ paddingTop: 200 }}>Loading profile...</div></div>;
+
+  return (
+    <div className="app">
+      <toast.Toast />
+      <div className="nav">
+        <div className="container between" style={{ paddingTop: 14, paddingBottom: 14 }}>
+          <div className="row" style={{ cursor: "pointer" }} onClick={() => setView({ name: "dashboard" })}>
+            <span style={{ color: "var(--accent)" }}>{I.trophy}</span>
+            <span className="display" style={{ fontSize: 22 }}>QUINIELA</span>
+            {profile.is_platform_admin && <span className="badge badge-admin">{I.shield} ADMIN</span>}
+          </div>
+          <div className="row">
+            <span className="muted" style={{ fontSize: 13 }}>{profile.username}</span>
+            <button className="btn btn-ghost" onClick={logout} style={{ padding: "6px 10px" }}>{I.logout}</button>
+          </div>
+        </div>
+      </div>
+
+      {view.name === "dashboard" && (
+        <Dashboard user={session.user} profile={profile}
+          onOpen={(q) => setView({ name: "quiniela", quiniela: q })}
+          onCreate={() => setView({ name: "create" })}
+          toast={toast} />
+      )}
+      {view.name === "create" && (
+        <CreateQuiniela user={session.user}
+          onBack={() => setView({ name: "dashboard" })}
+          onCreated={(q) => setView({ name: "quiniela", quiniela: q })}
+          toast={toast} />
+      )}
+      {view.name === "quiniela" && (
+        <QuinielaView user={session.user} profile={profile} quiniela={view.quiniela}
+          onBack={() => setView({ name: "dashboard" })}
+          onRefresh={refreshOpenQuiniela}
+          onDeleted={() => setView({ name: "dashboard" })}
+          toast={toast} />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
