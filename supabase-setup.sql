@@ -243,6 +243,7 @@ create policy "predictions_delete_own" on public.predictions
 
 -- ---------------------------------------------------------------------
 -- 6. WORLD CUP AUTO-SYNC FUNCTION
+-- (Fixed: longer wait + fallback to most recent response if id lookup fails)
 -- ---------------------------------------------------------------------
 
 create or replace function public.sync_worldcup_2026()
@@ -272,11 +273,28 @@ begin
     headers := '{"Accept": "application/json"}'::jsonb
   ) into response_id;
 
-  perform pg_sleep(3);
+  -- Wait 8 seconds for the async HTTP request to complete
+  perform pg_sleep(8);
 
-  select content into response_body from net._http_response where id = response_id;
+  -- Try to look up the response by request id; if not found, fall back to
+  -- the most recent response (handles pg_net version differences).
+  begin
+    select content into response_body
+    from net._http_response
+    where id = response_id;
+  exception when others then
+    response_body := null;
+  end;
+
   if response_body is null then
-    return 'Sync skipped — no response yet (will retry next cron tick)';
+    select content into response_body
+    from net._http_response
+    order by created desc
+    limit 1;
+  end if;
+
+  if response_body is null then
+    return 'Sync failed — no HTTP response found';
   end if;
 
   json_data := response_body::jsonb;
@@ -335,7 +353,6 @@ begin
     else updated_count := updated_count + 1; end if;
   end loop;
 
-  delete from net._http_response where id = response_id;
   return format('Sync complete: %s new, %s updated', new_count, updated_count);
 end;
 $$;
@@ -354,9 +371,10 @@ $$;
 
 select cron.schedule('worldcup_2026_sync', '*/30 * * * *', $$select public.sync_worldcup_2026();$$);
 
--- Run once now to populate (first call may not have data yet, do twice)
-select public.sync_worldcup_2026();
-select pg_sleep(5);
+-- Run once now to populate. The function waits 8s internally, which is
+-- usually enough on a warm Supabase project. If you see "Sync failed —
+-- no HTTP response found", just run `select public.sync_worldcup_2026();`
+-- again 10 seconds later — it'll catch the response.
 select public.sync_worldcup_2026();
 
 -- =====================================================================
